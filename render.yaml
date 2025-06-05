@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: discord-bot
+    env: python
+    buildCommand: pip install nextcord python-dotenv
+    startCommand: python main.py
+    plan: free
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
