@@ -388,11 +388,38 @@ async def on_application_command_error(interaction: nextcord.Interaction, error)
         else:
             await interaction.response.send_message("❌ An error occurred while processing your command.", ephemeral=True)
 
+# Health check server for Render.com
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import os
+
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b'Bot is running!')
+    
+    def log_message(self, format, *args):
+        pass  # Suppress HTTP server logs
+
+def start_health_server():
+    port = int(os.environ.get('PORT', 10000))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server.serve_forever()
+
 # Run the bot
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
         print("Error: DISCORD_TOKEN not found in environment variables")
-        print("Please create a .env file with your bot token")
+        print("Please create a .env file with your Discord bot token")
         exit(1)
     
+    # Start health check server in background thread
+    health_thread = threading.Thread(target=start_health_server, daemon=True)
+    health_thread.start()
+    print(f"Health server started on port {os.environ.get('PORT', 10000)}")
+    
+    # Start the Discord bot
+    print("Starting Discord bot...")
     bot.run(DISCORD_TOKEN)
